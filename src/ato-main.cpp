@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <IMAto.h>
  
 const char* ssid = "tahiti";
 const char* password =  "M4chado4221";
@@ -12,6 +13,7 @@ const char* mqttPassword = NULL;
  
 WiFiClient espClient;
 PubSubClient client(espClient);
+// IMATo ato;
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived in topic: ");
@@ -83,4 +85,6 @@ void setup() {
  
 void loop() {
   client.loop();
+  // ato.loop();
+  atoLoop();
 }
