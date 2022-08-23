@@ -1,5 +1,5 @@
 esphome:
-    name: open-ato-esp
+  name: open-ato-esp
 
 esp8266:
   board: nodemcuv2
@@ -27,28 +27,50 @@ captive_portal:
 
 switch:
   - platform: gpio
-    pin: D4
+    pin: D6
     name: "ATO Pump"
     id: ato_pump
+    restore_mode: RESTORE_DEFAULT_OFF
 
 binary_sensor:
   - platform: gpio
+    name: "Low level float switch"
+    id: ato_low_flow_sensor
+#    device_class: moisture
     pin:
-      number: D1
-      mode:
-        input: true
-        pullup: true
-    name: "Low level sensor"
+      number: D7
+      mode: INPUT_PULLUP
     filters:
-      - delayed_on: 5s
-    on_press:
-      then:
-        - switch.toggle: ato_pump
+      - invert:
+      #- delayed_on: 3s
+    on_state:
+      - switch.toggle: ato_pump
+
+
+#    on_state:
+#      if:
+#        condition:
+#          # Same syntax for is_off
+#          binary_sensor.is_on: ato_low_flow_sensor
+#      then:
+#        - switch.turn_off: ato_pump
+
+
+
+#Not wired up yet
+#  - platform: gpio
+#    name: "High level float switch"
+#    pin:
+#      number: D6
+#      mode: INPUT_PULLUP
+#    on_press:
+#      - switch.turn_off: ato_pump
 
 #OLED Display
 time:
   - platform: sntp
     id: sntp_time
+    timezone: Australia/Brisbane
     servers:
       - 0.pool.ntp.org
       - 1.pool.ntp.org
@@ -61,15 +83,15 @@ i2c:
 font:
   - file: "fonts/ComicSansMS3.ttf"
     id: comic_sans_font
-    size: 20
+    size: 12
 
 display:
   - platform: ssd1306_i2c
     model: "SSD1306 128x64"
     address: 0x3C
     lambda: |-
-      it.printf(64, 0, id(comic_sans_font), TextAlign::TOP_CENTER, "ATO");
-      
+      it.printf(5, 2, id(comic_sans_font), TextAlign::TOP_LEFT , "Invent Marine ATO");                                               
+      it.printf(5, 18, id(comic_sans_font), TextAlign::TOP_LEFT , "Sensor: %s", id(ato_low_flow_sensor).state?"On":"Off");                          
+      it.printf(5, 34, id(comic_sans_font), TextAlign::TOP_LEFT , "Pump: %s", id(ato_pump).state?"On":"Off");                          
       // Print time in HH:MM format
-      it.strftime(0, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%Y-%m-%d %H:%M:%S", id(sntp_time).now());      
-      it.printf(127, 23, id(comic_sans_font), TextAlign::BASELINE_RIGHT , "%.1f°", id(ato_pump).state);          
+      it.strftime(90, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%H:%M", id(sntp_time).now());            
