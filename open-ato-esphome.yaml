@@ -1,5 +1,8 @@
+substitutions:
+  devicename: open-ato-esp
+
 esphome:
-  name: open-ato-esp
+  name: $devicename
 
 esp8266:
   board: nodemcuv2
@@ -20,41 +23,51 @@ wifi:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Open-Ato-Esp Fallback Hotspot"
-    password: "yS0TVuS1ee4S"
+    ssid: "${devicename} Hotspot"
+    password: !secret wifi_hotspot_pwd
 
 captive_portal:
+
+# Example configuration entry
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+      id: ip_add
+    ssid:
+      name: ESP Connected SSID
+    bssid:
+      name: ESP Connected BSSID
 
 switch:
   - platform: gpio
     pin: D6
     name: "ATO Pump"
     id: ato_pump
-    restore_mode: RESTORE_DEFAULT_OFF
-
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      then:
+        - delay: 3min #Max time pumo is allowed to tun
+        - logger.log: "Pump timeout"
+        - switch.turn_off: ato_pump
 binary_sensor:
   - platform: gpio
     name: "Low level float switch"
     id: ato_low_flow_sensor
-#    device_class: moisture
+    #    device_class: moisture
     pin:
       number: D7
       mode: INPUT_PULLUP
     filters:
       - invert:
-      #- delayed_on: 3s
     on_state:
-      - switch.toggle: ato_pump
-
-
-#    on_state:
-#      if:
-#        condition:
-#          # Same syntax for is_off
-#          binary_sensor.is_on: ato_low_flow_sensor
-#      then:
-#        - switch.turn_off: ato_pump
-
+      if:
+        condition:
+          - binary_sensor.is_on: ato_low_flow_sensor
+        then:
+          - switch.turn_off: ato_pump
+        else:
+          - switch.turn_on: ato_pump
 
 
 #Not wired up yet
@@ -91,7 +104,9 @@ display:
     address: 0x3C
     lambda: |-
       it.printf(5, 2, id(comic_sans_font), TextAlign::TOP_LEFT , "Invent Marine ATO");                                               
-      it.printf(5, 18, id(comic_sans_font), TextAlign::TOP_LEFT , "Sensor: %s", id(ato_low_flow_sensor).state?"On":"Off");                          
-      it.printf(5, 34, id(comic_sans_font), TextAlign::TOP_LEFT , "Pump: %s", id(ato_pump).state?"On":"Off");                          
+      it.printf(5, 16, id(comic_sans_font), TextAlign::TOP_LEFT , "Sensor: %s", id(ato_low_flow_sensor).state?"On":"Off");                          
+      it.printf(5, 32, id(comic_sans_font), TextAlign::TOP_LEFT , "Pump: %s", id(ato_pump).state?"On":"Off");                          
       // Print time in HH:MM format
-      it.strftime(90, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%H:%M", id(sntp_time).now());            
+      it.printf(2, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%s", id(ip_add).state.c_str());
+      it.strftime(100, 62, id(comic_sans_font), TextAlign::BASELINE_LEFT, "v0.2", id(sntp_time).now());
+#      it.strftime(82, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%H:%M v0.2", id(sntp_time).now());

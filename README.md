@@ -17,12 +17,15 @@ Auto Top Off (ATO) device to replenish freshwater in marine aquariums, using cus
     ```
 
 # Features
-    * MQTT Support
+ * ATO with single float switch sensor and 12V freshwater pump (actuator/switch)
+ * Based on ESPHome firmware and compatible with Home Assistant.
+ * Support to mini OLED Display
+                                                                
+ Tested with NodeMCU v1.0 boards.
 
-# Backlog
- * Store Wifi secret in a secure way.
- * OTA
+# Roadmap
+ * Limit the maximum time the pump can run.  
  * Feature toggles
  * First library (for ATO)
  * ATO Logic
- * Mini LCD Support
+ 
