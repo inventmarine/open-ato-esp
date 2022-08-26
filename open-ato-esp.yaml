@@ -1,0 +1,182 @@
+substitutions:
+  devicename: open-ato-esp
+
+esphome:
+  name: $devicename
+  on_boot:
+    then:
+      if:
+        condition:
+          - binary_sensor.is_off: ato_low_flow_sensor
+        then:
+          - switch.turn_on: ato_pump
+        else:
+          - switch.turn_off: ato_pump
+
+esp8266:
+  board: nodemcuv2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${devicename} Hotspot"
+    password: !secret wifi_hotspot_pwd
+
+captive_portal:
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: ESP IP Address
+      id: ip_add
+    ssid:
+      name: ESP Connected SSID
+    bssid:
+      name: ESP Connected BSSID
+
+globals:
+  - id: pump_timeout
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: pump_on_elapsed_time
+    type: long
+    restore_value: no
+    initial_value: '0'
+  - id: pump_on_last_time
+    type: long
+    restore_value: no
+    initial_value: '0'
+
+# Example configuration entry
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-                          
+          if(id(pump_on_last_time) == 0){
+            id(pump_on_elapsed_time) = 0;
+          }else{
+            id(pump_on_elapsed_time) = (millis() - id(pump_on_last_time)) / 1000;
+            //TODO: make 8 sec timeout configurable 
+            if(id(pump_on_elapsed_time) > 8 ){
+              id(pump_timeout) = true;
+              id(ato_pump).turn_off();
+            }
+          }
+          ESP_LOGD("main", "pump_timeout: %d, pump_on_elapsed_time: %d secs", id(pump_timeout), id(pump_on_elapsed_time));  
+
+
+
+switch:
+  - platform: gpio
+    pin: D6
+    name: "ATO Pump"
+    id: ato_pump
+    restore_mode: ALWAYS_OFF
+    on_turn_on:
+      then:
+        - lambda: "id(pump_on_last_time) =  millis();"
+    on_turn_off:
+      then:
+        - lambda: "id(pump_on_last_time) = 0;"
+
+binary_sensor:
+  - platform: gpio
+    name: "Low level float switch"
+    id: ato_low_flow_sensor
+    pin:
+      number: D7
+      mode: INPUT_PULLUP
+    filters:
+      - invert:
+    on_state:
+      if:
+        condition:
+          and:
+            - binary_sensor.is_off: ato_low_flow_sensor
+            - lambda: "return id(pump_timeout) == false;"
+        then:
+          - switch.turn_on: ato_pump
+        else:
+          - switch.turn_off: ato_pump
+
+
+#Not wired up yet
+#  - platform: gpio
+#    name: "High level float switch"
+#    pin:
+#      number: D6
+#      mode: INPUT_PULLUP
+#    on_press:
+#      - switch.turn_off: ato_pump
+
+#OLED Display
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Australia/Brisbane
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+
+i2c:
+  sda: D3
+  scl: D5
+
+font:
+  - file: "fonts/ComicSansMS3.ttf"
+    id: font_md
+    size: 12
+  - file: "fonts/ComicSansMS3.ttf"
+    id: font_sm
+    size: 10
+
+color:
+  - id: light_red
+    red: 100%
+    green: 20%
+    blue: 25%
+    white: 0%
+  - id: light_green
+    red: 0%
+    green: 100%
+    blue: 25%
+    white: 0%
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+      auto red = Color(255, 0, 0);
+      auto green = Color(0, 255, 0);
+      auto blue = Color(0, 0, 255);
+      auto white = Color(255, 255, 255);
+      auto yellow = Color(255, 255, 0);
+      it.printf(5, 2, id(font_md), id(light_red),   "Invent Marine ATO");                                               
+      it.printf(5, 16, id(font_md), id(light_red),  "Water level: %s", id(ato_low_flow_sensor).state?"OK":"LOW");
+      if( id(pump_timeout) ){
+        it.printf(5, 32, id(font_md), id(light_red),  "TIMEOUT ERROR!    ");
+      } else {              
+        it.printf(5, 32, id(font_md), id(light_red),  "Pump: %s", id(ato_pump).state?"ON":"OFF");
+      }
+      it.printf(2, 50, id(font_sm), id(light_red),   "%s", id(ip_add).state.c_str());
+      it.printf(102, 50, id(font_sm), id(light_red),  "V0.8");
+#        it.printf(90, 32, id(font_md), id(light_red),  "%d secs", id(pump_on_elapsed_time));
+#      it.printf(71, 32, id(font_md), id(light_red),  "%s", (id(pump_on_elapsed_time)/1000)+ "secs");
+#      it.printf(61, 32, id(font_md), id(light_red),  "%s", id(pump_timeout)?" - Timeout":"");
+#      it.strftime(82, 60, id(comic_sans_font), TextAlign::BASELINE_LEFT, "%H:%M v0.2", id(sntp_time).now());
