@@ -1,15 +1,18 @@
-# Auto Top Off fro Aquariums
+# Auto Top Off for Marine Aquariums
 
-Auto Top Off (ATO) device to replenish freshwater in saltwater aquariums. 
-It is built with custom ESPHome firmware and only parts that can be sourced online, in web-sites like eBay and Aliexpress.
+Open source hardware for an Auto Top Off (ATO) device to replenish freshwater in saltwater aquariums. 
+The firmware is built with  ESPHome and all hardware parts can be sourced from web-sites such as eBay, Aliexpress and DFRobot.
 This is a nice weekend project for the average tinkerer and is purposely designed to be easy to build, without special tools nor programming knowledge.
 
 
+With this device, you can easily keep your aquarium at the perfect salinity level, making it a happy and healthy habitat for your marine life. 
+So if you're looking for a fun weekend project that will also benefit your aquarium, look no further!
+
+
+![](./img/open-ato-esp.png)
+
 **Status**: beta testing
 
-                           
-# Useful commands
-             
  ## Build & upload firmware
     `docker run --rm -v "${PWD}":/config -it esphome/esphome run open-ato-esp.yaml --device open-ato-esp.local`
 
@@ -38,18 +41,14 @@ This is a nice weekend project for the average tinkerer and is purposely designe
  * Wires and connectors.
  
 Tested with NodeMCU v1.0 boards.
-                        
-Proudly sponsored by inventmarine.com
-
-Developed by Franklin Dattein 
 
 
 # Backlog
-* Make sure pump turns on when booting
-* Sort out git commit
-* Evaluate the feasibility of writting tests
+* Evaluate the feasibility of writing tests
 * CI Build?
 * Instructions
-  ** Fritizing Diagram
+  ** Fritzing Diagram
 * 3D Printable enclosure
- 
+
+Developed by Franklin Dattein
+Proudly sponsored by [InventMarine.com](http://inventmarine.com)

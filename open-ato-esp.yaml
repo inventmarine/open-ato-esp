@@ -73,12 +73,10 @@ interval:
             //TODO: make 8 sec timeout configurable 
             if(id(pump_on_elapsed_time) > 8 ){
               id(pump_timeout) = true;
-              id(ato_pump).turn_off();
+              id(ato_pump).turn_off();          
             }
           }
-          ESP_LOGD("main", "pump_timeout: %d, pump_on_elapsed_time: %d secs", id(pump_timeout), id(pump_on_elapsed_time));  
-
-
+          //ESP_LOGD("main", "pump_timeout: %d, pump_on_elapsed_time: %d secs", id(pump_timeout), id(pump_on_elapsed_time));  
 
 switch:
   - platform: gpio
@@ -110,6 +108,8 @@ binary_sensor:
             - lambda: "return id(pump_timeout) == false;"
         then:
           - switch.turn_on: ato_pump
+#          - rtttl.play: 'MissionImp:d=16,o=6,b=95:32d,32d#,32d,32d#,32d,32d#,32d,32d#,32d,32d,32d#,32e,32f,32f#,32g,g,8p,g,8p,a#,p,c7,p,g,8p,g,8p,f,p,f#,p,g,8p,g,8p,a#,p,c7,p,g,8p,g,8p,f,p,f#,p,a#,g,2d,32p,a#,g,2c#,32p,a#,g,2c,a#5,8c,2p,32p,a#5,g5,2f#,32p,a#5,g5,2f,32p,a#5,g5,2e,d#,8d'
+          - rtttl.play: 'two short:d=4,o=5,b=100:16e6,16e6'
         else:
           - switch.turn_off: ato_pump
 
@@ -122,6 +122,18 @@ binary_sensor:
 #      mode: INPUT_PULLUP
 #    on_press:
 #      - switch.turn_off: ato_pump
+
+# Buzzer
+output:
+  - platform: esp8266_pwm
+#  - platform: ledc
+    pin: D1
+    id: rtttl_out
+
+rtttl:
+  output: rtttl_out
+  on_finished_playback:
+    - logger.log: 'Song ended!'
 
 #OLED Display
 time:
@@ -175,7 +187,7 @@ display:
         it.printf(5, 32, id(font_md), id(light_red),  "Pump: %s", id(ato_pump).state?"ON":"OFF");
       }
       it.printf(2, 50, id(font_sm), id(light_red),   "%s", id(ip_add).state.c_str());
-      it.printf(102, 50, id(font_sm), id(light_red),  "V0.8");
+      it.printf(102, 50, id(font_sm), id(light_red),  "V0.10");
 #        it.printf(90, 32, id(font_md), id(light_red),  "%d secs", id(pump_on_elapsed_time));
 #      it.printf(71, 32, id(font_md), id(light_red),  "%s", (id(pump_on_elapsed_time)/1000)+ "secs");
 #      it.printf(61, 32, id(font_md), id(light_red),  "%s", id(pump_timeout)?" - Timeout":"");
