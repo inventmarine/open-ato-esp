@@ -23,11 +23,12 @@ So if you're looking for a fun weekend project that will also benefit your aquar
     ```
 
 # Features
- * ATO with single float or dual float switch sensor and 12V freshwater pump (actuator/switch).
- * Customisable pump timeout.
+ * Ability to use either a single float switch or combined with an optical switch. 
+ * Controls 12V pump or solenoid.
+ * Customisable pump timeout to prevent flooding.
  * Based on ESPHome firmware and consequently compatible with Home Assistant, MQTT, etc.
- * Over the air (OTA) updates
- * Mini OLED Display
+ * Over the air (OTA) updates.
+ * Mini OLED Display.
  * Programming can be fully modified using a yaml file (no need for advanced programming skills)
 
 
